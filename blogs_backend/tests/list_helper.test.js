@@ -113,7 +113,6 @@ describe("utils", () => {
     },
   ];
 
-
   const oneBlogWithSevenLikes = [
     {
       _id: "5a422a851b54a676234d17f7",
@@ -193,7 +192,7 @@ describe("utils", () => {
       const result = listHelper.mostBlogs([]);
       assert.strictEqual(result, null);
     });
-    test("of list consisting of one blog returns the author and blogs of the blog", () => {
+    test("of list consisting of one blog returns its author", () => {
       const result = listHelper.mostBlogs(oneBlogWithSevenLikes);
       assert.deepStrictEqual(result, { author: "Michael Chan", blogs: 1 });
     });
@@ -204,6 +203,25 @@ describe("utils", () => {
     test("of bigger list in different order returns the author with most blogs", () => {
       const result = listHelper.mostBlogs(differentOrderBlogs);
       assert.deepStrictEqual(result, { author: "Robert C. Martin", blogs: 3 });
+    });
+  });
+
+  describe("most likes", () => {
+    test("of empty list is null", () => {
+      const result = listHelper.mostLikes([]);
+      assert.strictEqual(result, null);
+    });
+    test("of list consisting of one blog returns its author", () => {
+      const result = listHelper.mostLikes(oneBlogWithSevenLikes);
+      assert.deepStrictEqual(result, { author: "Michael Chan", likes: 7 });
+    });
+    test("of bigger list returns the author with most likes", () => {
+      const result = listHelper.mostLikes(blogsWiththirtySixLikes);
+      assert.deepStrictEqual(result, { author: "Edsger W. Dijkstra", likes: 17 });
+    });
+    test("of bigger list in different order returns the author with most likes", () => {
+      const result = listHelper.mostLikes(differentOrderBlogs);
+      assert.deepStrictEqual(result, { author: "Edsger W. Dijkstra", likes: 17 });
     });
   });
 });

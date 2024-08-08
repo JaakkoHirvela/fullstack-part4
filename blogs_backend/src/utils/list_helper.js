@@ -20,7 +20,7 @@ const mostBlogs = (blogs) => {
     return author;
   }, {});
 
-  // Get blogs per author object as entries of and reduce to get author with most blogs.
+  // Get author with most blogs.
   const [author, blogCount] = Object.entries(authorBlogs).reduce((max, entry) => {
     return max[1] >= entry[1] ? max : entry;
   }, ["", 0]);
@@ -28,4 +28,21 @@ const mostBlogs = (blogs) => {
   return { author, blogs: blogCount };
 };
 
-module.exports = { dummy, totalLikes, favoriteBlog, mostBlogs };
+const mostLikes = (blogs) => {
+  if (blogs.length === 0) return null;
+
+  // Get likes per author
+  const authorLikes = blogs.reduce((author, blog) => {
+    author[blog.author] = (author[blog.author] || 0) + blog.likes;
+    return author;
+  }, {});
+
+  // Get author with most likes.
+  const [author, likes] = Object.entries(authorLikes).reduce((max, entry) => {
+    return max[1] >= entry[1] ? max : entry;
+  }, ["", 0]);
+
+  return { author, likes };
+}
+
+module.exports = { dummy, totalLikes, favoriteBlog, mostBlogs, mostLikes };
