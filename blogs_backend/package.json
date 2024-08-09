@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node --test",
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "NODE_ENV=production node index.js",
+    "dev": "NODE_ENV=development nodemon index.js",
+    "test": "NODE_ENV=test node --test"
   },
   "author": "",
   "license": "ISC",
@@ -15,7 +15,14 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
     "mongoose": "^8.5.2",
     "nodemon": "^3.1.4"
+  },
+  "_comments": {
+    "note": "Check out cross-env package for setting NODE_ENV when cross-platform"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
   }
 }
