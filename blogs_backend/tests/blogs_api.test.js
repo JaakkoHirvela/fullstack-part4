@@ -88,6 +88,25 @@ describe("api tests", () => {
       // Check that the last blog has the same title as the just added blog.
       assert.strictEqual(lastBlog.title, newBlog.title);
     });
+
+    test("if added blog has no likes-field, default to 0", async () => {
+      const newBlog = {
+        title: "Test blog",
+        author: "Test author",
+        url: "https://test.com",
+      };
+
+      await api
+        .post("/api/blogs")
+        .send(newBlog)
+        .expect(201)
+        .expect("Content-Type", /application\/json/);
+
+      const response = await api.get("/api/blogs");
+      const lastBlog = response.body[response.body.length - 1];
+
+      assert.strictEqual(lastBlog.likes, 0);
+    });
   });
 });
 
