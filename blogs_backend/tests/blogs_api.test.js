@@ -129,6 +129,30 @@ describe("api tests", () => {
       assert.strictEqual(response.body.length, initialBlogs.length);
     });
   });
+
+  describe("DELETE /api/blogs/:id", () => {
+    test("deleting a blog", async () => {
+      await api.delete(`/api/blogs/${initialBlogs[0]._id}`).expect(204);
+
+      const response = await api.get("/api/blogs");
+
+      assert.strictEqual(response.body.length, initialBlogs.length - 1);
+    });
+
+    test("deleting a non-existing blog should return 404", async () => {
+      const nonExistingId = "5a422b3a1b54a676234d17f0";
+      await api.delete(`/api/blogs/${nonExistingId}`).expect(404);
+
+      const response = await api.get("/api/blogs");
+      assert.strictEqual(response.body.length, initialBlogs.length);
+    });
+
+    test("deleting a blog with invalid id should return 400", async () => {
+      const invalidId = "12414";
+
+      await api.delete(`/api/blogs/${invalidId}`).expect(400);
+    });
+  });
 });
 
 after(async () => {
