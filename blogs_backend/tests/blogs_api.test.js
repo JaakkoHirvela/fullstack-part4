@@ -44,20 +44,51 @@ beforeEach(async () => {
 });
 
 describe("api tests", () => {
-  test("blogs are returned as json", async () => {
-    await api
-      .get("/api/blogs")
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
+  describe("GET /api/blogs", () => {
+    test("blogs are returned as json", async () => {
+      await api
+        .get("/api/blogs")
+        .expect(200)
+        .expect("Content-Type", /application\/json/);
+    });
+
+    test("there's three blogs", async () => {
+      const response = await api.get("/api/blogs");
+      assert.strictEqual(response.body.length, initialBlogs.length);
+    });
+
+    test("the identification field is id instead of default _id", async () => {
+      const response = await api.get("/api/blogs");
+      assert(response.body[0]._id === undefined);
+      assert(response.body[0].id);
+    });
   });
 
-  test("there's three blogs", async () => {
-    const response = await api.get("/api/blogs");
-    assert.strictEqual(response.body.length, initialBlogs.length);
+  describe("POST /api/blogs", () => {
+    test("a valid blog can be added", async () => {
+      const newBlog = {
+        title: "Test blog",
+        author: "Test author",
+        url: "https://test.com",
+        likes: 0,
+      };
+
+      await api
+        .post("/api/blogs")
+        .send(newBlog)
+        .expect(201)
+        .expect("Content-Type", /application\/json/);
+
+      const response = await api.get("/api/blogs");
+      const lastBlog = response.body[response.body.length - 1];
+
+      // Check that the response body has one more blog than the initial blogs.
+      assert.strictEqual(response.body.length, initialBlogs.length + 1);
+
+      // Check that the last blog has the same title as the just added blog.
+      assert.strictEqual(lastBlog.title, newBlog.title);
+    });
   });
-
-
-
 });
 
 after(async () => {
