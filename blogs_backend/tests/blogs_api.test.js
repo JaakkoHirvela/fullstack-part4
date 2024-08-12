@@ -37,10 +37,7 @@ const initialBlogs = [
 
 beforeEach(async () => {
   await Blog.deleteMany({});
-  logger.info("db cleared");
-
   await Blog.insertMany(initialBlogs);
-  logger.info("db seeded");
 });
 
 describe("api tests", () => {
@@ -106,6 +103,30 @@ describe("api tests", () => {
       const lastBlog = response.body[response.body.length - 1];
 
       assert.strictEqual(lastBlog.likes, 0);
+    });
+
+    test("if added blog has no title, respond with 400", async () => {
+      const newBlogNoTitle = {
+        author: "Test author",
+        url: "https://test.com",
+      };
+      await api.post("/api/blogs").send(newBlogNoTitle).expect(400);
+
+      // Make sure the blog was not added.
+      const response = await api.get("/api/blogs");
+      assert.strictEqual(response.body.length, initialBlogs.length);
+    });
+
+    test("if added blog has no url, respond with 400", async () => {
+      const noUrl = {
+        title: "Test title",
+        author: "Test author",
+      };
+      await api.post("/api/blogs").send(noUrl).expect(400);
+
+      // Make sure the blog was not added.
+      const response = await api.get("/api/blogs");
+      assert.strictEqual(response.body.length, initialBlogs.length);
     });
   });
 });
