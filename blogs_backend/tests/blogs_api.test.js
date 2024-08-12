@@ -35,6 +35,8 @@ const initialBlogs = [
   },
 ];
 
+const nonExistingId = "5a422b3a1b54a676234d17f0";
+
 beforeEach(async () => {
   await Blog.deleteMany({});
   await Blog.insertMany(initialBlogs);
@@ -140,7 +142,6 @@ describe("api tests", () => {
     });
 
     test("deleting a non-existing blog should return 404", async () => {
-      const nonExistingId = "5a422b3a1b54a676234d17f0";
       await api.delete(`/api/blogs/${nonExistingId}`).expect(404);
 
       const response = await api.get("/api/blogs");
@@ -151,6 +152,37 @@ describe("api tests", () => {
       const invalidId = "12414";
 
       await api.delete(`/api/blogs/${invalidId}`).expect(400);
+    });
+  });
+
+  describe("PUT /api/blogs/:id", () => {
+    test("updating a blog", async () => {
+      const updatedBlog = {
+        title: "Updated title",
+        author: "Updated author",
+        url: "https://updated.com",
+        likes: 100,
+      };
+
+      await api.put(`/api/blogs/${initialBlogs[0]._id}`).send(updatedBlog).expect(200);
+
+      const response = await api.get("/api/blogs");
+      
+      // Check that no blog was added or deleted.
+      assert.strictEqual(response.body.length, initialBlogs.length);
+
+      const likes = response.body.map((blog) => blog.likes);
+      assert(likes.includes(100));
+    });
+
+    test("updating a blog with invalid id should return 400", async () => {
+      const invalidId = "12414";
+
+      await api.put(`/api/blogs/${invalidId}`).expect(400);
+    });
+
+    test("updating a non-existing blog should return 404", async () => {
+      await api.put(`/api/blogs/${nonExistingId}`).expect(404);
     });
   });
 });

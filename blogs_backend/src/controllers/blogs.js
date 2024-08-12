@@ -23,11 +23,28 @@ blogsRouter.delete("/:id", async (request, response) => {
   // Check if the id is valid.
   if (!ObjectId.isValid(request.params.id)) return response.status(400).json({ error: "invalid id" });
 
-  const result = await Blog.findOneAndDelete({ _id: request.params.id });
+  const result = await Blog.findByIdAndDelete({ _id: request.params.id });
 
   if (!result) return response.status(404).json({ error: "blog not found" });
 
   response.status(204).end();
+});
+
+/**
+ * Update a blog.
+ *
+ * Currently every field in the blog can be updated.
+ */
+blogsRouter.put("/:id", async (request, response) => {
+  // Check if the id is valid.
+  if (!ObjectId.isValid(request.params.id)) return response.status(400).json({ error: "invalid id" });
+
+  const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, request.body, { new: true });
+
+  // Check that the blog exists.
+  if (!updatedBlog) return response.status(404).json({ error: "blog not found" });
+
+  response.status(200).json(updatedBlog);
 });
 
 module.exports = blogsRouter;
