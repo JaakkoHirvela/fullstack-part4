@@ -66,6 +66,51 @@ describe(`${testedRoute}`, () => {
       const users = await User.find({});
       assert.strictEqual(users.length, initialUsers.length);
     });
+
+    test("user with no password cannot be created", async () => {
+      const response = await api
+        .post(`${testedRoute}`)
+        .send({ username: "johndoe", name: "John Doe" })
+        .set("Accept", "application/json")
+        .expect(400)
+        .expect("Content-Type", /application\/json/);
+
+      assert.strictEqual(response.body.error, "password is required");
+
+      // Check that the user was not added.
+      const users = await User.find({});
+      assert.strictEqual(users.length, initialUsers.length);
+    });
+
+    test("user with no username cannot be created", async () => {
+      const response = await api
+        .post(`${testedRoute}`)
+        .send({ name: "John Doe", password: "password" })
+        .set("Accept", "application/json")
+        .expect(400)
+        .expect("Content-Type", /application\/json/);
+
+      assert.strictEqual(response.body.error, "username is required");
+
+      // Check that the user was not added.
+      const users = await User.find({});
+      assert.strictEqual(users.length, initialUsers.length);
+    });
+
+    test("user with password less than 3 characters cannot be created", async () => {
+      const response = await api
+        .post(`${testedRoute}`)
+        .send({ username: "johndoe", name: "John Doe", password: "12" })
+        .set("Accept", "application/json")
+        .expect(400)
+        .expect("Content-Type", /application\/json/);
+
+      assert.strictEqual(response.body.error, "password must be at least 3 characters long");
+
+      // Check that the user was not added.
+      const users = await User.find({});
+      assert.strictEqual(users.length, initialUsers.length);
+    });
   });
 
   describe(`GET ${testedRoute}`, () => {
