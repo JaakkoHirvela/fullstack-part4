@@ -7,6 +7,7 @@ const Blog = require("../src/models/blog");
 const logger = require("../src/utils/logger");
 
 const api = supertest(app);
+const testedRoute = "/api/blogs";
 
 const initialBlogs = [
   {
@@ -42,8 +43,8 @@ beforeEach(async () => {
   await Blog.insertMany(initialBlogs);
 });
 
-describe("api tests", () => {
-  describe("GET /api/blogs", () => {
+describe(`${testedRoute}`, () => {
+  describe(`GET ${testedRoute}`, () => {
     test("blogs are returned as json", async () => {
       await api
         .get("/api/blogs")
@@ -63,7 +64,7 @@ describe("api tests", () => {
     });
   });
 
-  describe("POST /api/blogs", () => {
+  describe(`POST ${testedRoute}`, () => {
     test("a valid blog can be added", async () => {
       const newBlog = {
         title: "Test blog",
@@ -132,7 +133,7 @@ describe("api tests", () => {
     });
   });
 
-  describe("DELETE /api/blogs/:id", () => {
+  describe(`DELETE ${testedRoute}/:id`, () => {
     test("deleting a blog", async () => {
       await api.delete(`/api/blogs/${initialBlogs[0]._id}`).expect(204);
 
@@ -155,7 +156,7 @@ describe("api tests", () => {
     });
   });
 
-  describe("PUT /api/blogs/:id", () => {
+  describe(`PUT ${testedRoute}/:id`, () => {
     test("updating a blog", async () => {
       const updatedBlog = {
         title: "Updated title",
