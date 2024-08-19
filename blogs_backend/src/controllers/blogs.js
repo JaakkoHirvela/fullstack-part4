@@ -1,21 +1,28 @@
 const Blog = require("../models/blog");
+const User = require("../models/user");
 const blogsRouter = require("express").Router();
 const logger = require("../utils/logger");
 const { ObjectId } = require("mongoose").Types;
 
 blogsRouter.get("/", async (request, response) => {
-  const blogs = await Blog.find({});
+  const blogs = await Blog.find({}).populate("user", { userName: 1, name: 1, id: 1 });
   response.json(blogs);
 });
 
 blogsRouter.post("/", async (request, response) => {
-  const blog = new Blog(request.body);
+  const someUser = await User.findOne({});
+  const blog = new Blog({ user: someUser._id, ...request.body });
 
   if (!blog.title) return response.status(400).json({ error: "title is required" });
 
   if (!blog.url) return response.status(400).json({ error: "url is required" });
 
   const result = await blog.save();
+
+  // Add the blog to the user's blogs here also.
+  someUser.blogs = someUser.blogs.concat(result._id);
+  await someUser.save();
+
   response.status(201).json(result);
 });
 
