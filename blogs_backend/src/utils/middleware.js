@@ -1,4 +1,5 @@
 const logger = require("./logger");
+const { getTokenFrom } = require("./auth_helpers");
 
 const errorHandler = (error, request, response, next) => {
   if (error.name === "MongoServerError" && error.message.includes("E11000 duplicate key error")) {
@@ -10,4 +11,11 @@ const errorHandler = (error, request, response, next) => {
   next(error);
 };
 
-module.exports = { errorHandler };
+const tokenExtractor = (request, response, next) => {
+  const token = getTokenFrom(request);
+  request.token = token;
+  
+  next();
+};
+
+module.exports = { errorHandler, tokenExtractor };

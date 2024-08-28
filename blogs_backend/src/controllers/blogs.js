@@ -3,7 +3,6 @@ const User = require("../models/user");
 const blogsRouter = require("express").Router();
 const logger = require("../utils/logger");
 const jwt = require("jsonwebtoken");
-const { getTokenFrom } = require("../utils/auth_helpers");
 const { ObjectId } = require("mongoose").Types;
 
 blogsRouter.get("/", async (request, response) => {
@@ -14,17 +13,14 @@ blogsRouter.get("/", async (request, response) => {
 blogsRouter.post("/", async (request, response, next) => {
   let decodedToken;
   try {
-    decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+    decodedToken = jwt.verify(request.token, process.env.SECRET);
   } catch (error) {
     return next(error);
   }
-
   const user = await User.findById(decodedToken.id);
-
   const blog = new Blog({ user: user._id, ...request.body });
 
   if (!blog.title) return response.status(400).json({ error: "title is required" });
-
   if (!blog.url) return response.status(400).json({ error: "url is required" });
 
   const result = await blog.save();
