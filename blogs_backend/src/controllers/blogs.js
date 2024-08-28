@@ -2,6 +2,8 @@ const Blog = require("../models/blog");
 const User = require("../models/user");
 const blogsRouter = require("express").Router();
 const logger = require("../utils/logger");
+const jwt = require("jsonwebtoken");
+const { getTokenFrom } = require("../utils/auth_helpers");
 const { ObjectId } = require("mongoose").Types;
 
 blogsRouter.get("/", async (request, response) => {
@@ -9,9 +11,17 @@ blogsRouter.get("/", async (request, response) => {
   response.json(blogs);
 });
 
-blogsRouter.post("/", async (request, response) => {
-  const someUser = await User.findOne({});
-  const blog = new Blog({ user: someUser._id, ...request.body });
+blogsRouter.post("/", async (request, response, next) => {
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+  } catch (error) {
+    return next(error);
+  }
+
+  const user = await User.findById(decodedToken.id);
+
+  const blog = new Blog({ user: user._id, ...request.body });
 
   if (!blog.title) return response.status(400).json({ error: "title is required" });
 
@@ -20,8 +30,8 @@ blogsRouter.post("/", async (request, response) => {
   const result = await blog.save();
 
   // Add the blog to the user's blogs here also.
-  someUser.blogs = someUser.blogs.concat(result._id);
-  await someUser.save();
+  user.blogs = user.blogs.concat(result._id);
+  await user.save();
 
   response.status(201).json(result);
 });
