@@ -1,9 +1,9 @@
 POST http://localhost:3001/api/blogs
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJpZCI6IjY2YzM4MDg2ZTJhZjdjYmQ0MWQxYzcwYiIsImlhdCI6MTcyNDg2MTc5OH0.Dn4Q5RgdlrXc8gHFSapSpqYOOhqa_bIncmMZ-cK3ewk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QyIiwiaWQiOiI2NmNmNTgyZWVhNzkyMzhlOTk5NTM4MmUiLCJpYXQiOjE3MjQ4NjQ1NjZ9.ZRIHRmpuHrXPnAbjE0lrHAg_HrexN1dA8CAJwfCkv7M
 
 {
-  "title": "My fifth blog post",
+  "title": "Other users blog",
   "author": "John Doe",
   "url": "http://johnsblog.com",
   "likes": 5

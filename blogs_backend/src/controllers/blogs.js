@@ -4,20 +4,20 @@ const blogsRouter = require("express").Router();
 const logger = require("../utils/logger");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongoose").Types;
+const { userExtractor } = require("../utils/middleware");
+
+/**
+ * Unauthorized users have only read access to the blogs.
+ * Logged in users can create, update and delete blogs.
+ */
 
 blogsRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { userName: 1, name: 1, id: 1 });
   response.json(blogs);
 });
 
-blogsRouter.post("/", async (request, response, next) => {
-  let decodedToken;
-  try {
-    decodedToken = jwt.verify(request.token, process.env.SECRET);
-  } catch (error) {
-    return next(error);
-  }
-  const user = await User.findById(decodedToken.id);
+blogsRouter.post("/", userExtractor, async (request, response, next) => {
+  const user = request.user;
   const blog = new Blog({ user: user._id, ...request.body });
 
   if (!blog.title) return response.status(400).json({ error: "title is required" });
@@ -32,15 +32,18 @@ blogsRouter.post("/", async (request, response, next) => {
   response.status(201).json(result);
 });
 
-blogsRouter.delete("/:id", async (request, response) => {
+blogsRouter.delete("/:id", userExtractor, async (request, response) => {
   // Check if the id is valid.
   if (!ObjectId.isValid(request.params.id)) return response.status(400).json({ error: "invalid id" });
 
-  const result = await Blog.findByIdAndDelete({ _id: request.params.id });
+  const blog = await Blog.findById(request.params.id);
+  if (!blog) return response.status(404).json({ error: "blog not found" });
 
-  if (!result) return response.status(404).json({ error: "blog not found" });
+  // Check that the user is the creator of the blog.
+  if (blog.user.toString() !== request.user._id.toString()) return response.status(401).json({ error: "unauthorized" });
 
-  response.status(204).end();
+  await Blog.deleteOne({ _id: request.params.id });
+  return response.status(204).end();
 });
 
 /**
@@ -48,7 +51,7 @@ blogsRouter.delete("/:id", async (request, response) => {
  *
  * Currently every field in the blog can be updated.
  */
-blogsRouter.put("/:id", async (request, response) => {
+blogsRouter.put("/:id", userExtractor, async (request, response) => {
   // Check if the id is valid.
   if (!ObjectId.isValid(request.params.id)) return response.status(400).json({ error: "invalid id" });
 
