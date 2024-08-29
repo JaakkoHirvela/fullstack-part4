@@ -1,4 +1,4 @@
-const { test, after, beforeEach, describe } = require("node:test");
+const { test, after, beforeEach, describe, before } = require("node:test");
 const assert = require("node:assert");
 const mongoose = require("mongoose");
 const supertest = require("supertest");
@@ -37,6 +37,13 @@ const initialBlogs = [
 ];
 
 const nonExistingId = "5a422b3a1b54a676234d17f0";
+let token;
+
+// Log the test user in.
+before(async () => {
+  const response = await api.post("/api/login").send({ userName: "joe", password: "password" });
+  token = response.body.token;
+});
 
 beforeEach(async () => {
   await Blog.deleteMany({});
@@ -75,6 +82,7 @@ describe(`${testedRoute}`, () => {
 
       await api
         .post("/api/blogs")
+        .set("Authorization", "Bearer " + token)
         .send(newBlog)
         .expect(201)
         .expect("Content-Type", /application\/json/);
@@ -98,6 +106,7 @@ describe(`${testedRoute}`, () => {
 
       await api
         .post("/api/blogs")
+        .set("Authorization", "Bearer " + token)
         .send(newBlog)
         .expect(201)
         .expect("Content-Type", /application\/json/);
@@ -113,7 +122,11 @@ describe(`${testedRoute}`, () => {
         author: "Test author",
         url: "https://test.com",
       };
-      await api.post("/api/blogs").send(newBlogNoTitle).expect(400);
+      await api
+        .post("/api/blogs")
+        .send(newBlogNoTitle)
+        .set("Authorization", "Bearer " + token)
+        .expect(400);
 
       // Make sure the blog was not added.
       const response = await api.get("/api/blogs");
@@ -125,7 +138,31 @@ describe(`${testedRoute}`, () => {
         title: "Test title",
         author: "Test author",
       };
-      await api.post("/api/blogs").send(noUrl).expect(400);
+      await api
+        .post("/api/blogs")
+        .set("Authorization", "Bearer " + token)
+        .send(noUrl)
+        .expect(400);
+
+      // Make sure the blog was not added.
+      const response = await api.get("/api/blogs");
+      assert.strictEqual(response.body.length, initialBlogs.length);
+    });
+
+    test("if request doesn't have token, respond with 401", async () => {
+      const newBlog = {
+        title: "Test blog",
+        author: "Test author",
+        url: "https://test.com",
+        likes: 0,
+      };
+
+      await api
+        .post("/api/blogs")
+        // No token
+        .send(newBlog)
+        .expect(401)
+        .expect("Content-Type", /application\/json/);
 
       // Make sure the blog was not added.
       const response = await api.get("/api/blogs");
@@ -134,17 +171,34 @@ describe(`${testedRoute}`, () => {
   });
 
   describe(`DELETE ${testedRoute}/:id`, () => {
-    test("deleting a blog", async () => {
-      await api.delete(`/api/blogs/${initialBlogs[0]._id}`).expect(204);
+    test("deleting a blog returns 204", async () => {
+      const postResponse = await api
+        .post("/api/blogs")
+        .set("Authorization", "Bearer " + token)
+        .send({
+          title: "Test blog",
+          author: "Edsger W. Dijkstra",
+          url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+          likes: 10,
+        });
+      const newBlogId = postResponse.body.id;
+
+      await api
+        .delete(`/api/blogs/${newBlogId}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(204);
 
       const response = await api.get("/api/blogs");
 
-      assert.strictEqual(response.body.length, initialBlogs.length - 1);
+      // We add and delete a blog, so the amount of blogs should be the same as the initial amount.
+      assert.strictEqual(response.body.length, initialBlogs.length);
     });
 
     test("deleting a non-existing blog should return 404", async () => {
-      await api.delete(`/api/blogs/${nonExistingId}`).expect(404);
-
+      await api
+        .delete(`/api/blogs/${nonExistingId}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(404);
       const response = await api.get("/api/blogs");
       assert.strictEqual(response.body.length, initialBlogs.length);
     });
@@ -152,7 +206,10 @@ describe(`${testedRoute}`, () => {
     test("deleting a blog with invalid id should return 400", async () => {
       const invalidId = "12414";
 
-      await api.delete(`/api/blogs/${invalidId}`).expect(400);
+      await api
+        .delete(`/api/blogs/${invalidId}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(400);
     });
   });
 
@@ -165,10 +222,14 @@ describe(`${testedRoute}`, () => {
         likes: 100,
       };
 
-      await api.put(`/api/blogs/${initialBlogs[0]._id}`).send(updatedBlog).expect(200);
+      await api
+        .put(`/api/blogs/${initialBlogs[0]._id}`)
+        .set("Authorization", "Bearer " + token)
+        .send(updatedBlog)
+        .expect(200);
 
       const response = await api.get("/api/blogs");
-      
+
       // Check that no blog was added or deleted.
       assert.strictEqual(response.body.length, initialBlogs.length);
 
@@ -179,11 +240,17 @@ describe(`${testedRoute}`, () => {
     test("updating a blog with invalid id should return 400", async () => {
       const invalidId = "12414";
 
-      await api.put(`/api/blogs/${invalidId}`).expect(400);
+      await api
+        .put(`/api/blogs/${invalidId}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(400);
     });
 
     test("updating a non-existing blog should return 404", async () => {
-      await api.put(`/api/blogs/${nonExistingId}`).expect(404);
+      await api
+        .put(`/api/blogs/${nonExistingId}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(404);
     });
   });
 });

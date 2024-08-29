@@ -26,9 +26,6 @@ beforeEach(async () => {
 describe(`${testedRoute}`, () => {
   describe(`POST ${testedRoute}`, () => {
     test("valid user can log in", async () => {
-
-      logger.info(`TEST: Logging in user: ${testUser.userName}`);
-
       const response = await api
         .post(`${testedRoute}`)
         .send({ userName: testUser.userName, password: password })
